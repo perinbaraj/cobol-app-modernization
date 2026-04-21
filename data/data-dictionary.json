@@ -1,0 +1,24 @@
+[
+  {
+    "name": "PROD.CUST.MASTER",
+    "type": "VSAM-KSDS",
+    "copybook": "CUST-REC",
+    "keyFields": ["CUST-ID"],
+    "keyLength": 10,
+    "keyOffset": 0,
+    "recordSize": 250,
+    "estimatedRecords": 5000000,
+    "targetDatabase": "Azure SQL",
+    "targetTable": "customers"
+  },
+  {
+    "name": "PROD.CUST.DAILY.UPDATES",
+    "type": "Sequential",
+    "copybook": "CUST-REC",
+    "keyFields": [],
+    "recordSize": 250,
+    "estimatedRecords": 50000,
+    "targetDatabase": "Azure SQL",
+    "targetTable": "customer_updates_staging"
+  }
+]

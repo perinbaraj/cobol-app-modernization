@@ -1,0 +1,7 @@
+[
+  {
+    "name": "CUST-REC",
+    "usedBy": ["CUSTMGMT", "CUSTVAL", "CUSTLOAD", "CUSTRPT", "CUSTMENU", "CUSTINQ"],
+    "usageCount": 6
+  }
+]

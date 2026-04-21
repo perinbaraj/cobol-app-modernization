@@ -1,0 +1,14 @@
+{
+  "name": "mainframe-context-mcp",
+  "version": "1.0.0",
+  "description": "MCP server providing mainframe codebase context to GitHub Copilot",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "validate": "node validate.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

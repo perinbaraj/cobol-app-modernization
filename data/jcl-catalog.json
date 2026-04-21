@@ -1,0 +1,14 @@
+[
+  {
+    "jobName": "CUSTBAT",
+    "fileName": "CUSTBAT.jcl",
+    "programs": ["CUSTLOAD", "CUSTVAL", "CUSTRPT"],
+    "procedures": [],
+    "datasets": ["PROD.CUST.MASTER", "PROD.CUST.DAILY.UPDATES", "PROD.CUST.ERRORS"],
+    "stepCount": 3,
+    "schedule": "DAILY 06:00 UTC",
+    "sla": "Complete by 08:00 UTC",
+    "dependencies": ["CUSTEXTRACT"],
+    "migrationStatus": "pending"
+  }
+]
