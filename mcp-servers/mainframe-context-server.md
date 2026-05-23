@@ -133,7 +133,32 @@ You're scanning the raw source code to extract **metadata** (not the code itself
 
 ### Scanner Script (Python)
 
-Create this script in your migration repo as `scripts/scan-codebase.py`:
+The scanner script is included in this repository at `scripts/scan-codebase.py`. Run it with:
+
+**Windows (PowerShell):**
+```powershell
+python scripts\\scan-codebase.py `
+  --cobol-dir C:\\path\\to\\cobol `
+  --jcl-dir C:\\path\\to\\jcl `
+  --output-dir data\\
+```
+
+**Linux/macOS (Bash):**
+```bash
+python3 scripts/scan-codebase.py \\
+  --cobol-dir /path/to/cobol \\
+  --jcl-dir /path/to/jcl \\
+  --output-dir data/
+```
+
+> **Using the samples?** Run the bootstrap script instead — it handles everything:
+>
+> **Windows:** `.\scripts\bootstrap.ps1`
+> **Linux/macOS:** `./scripts/bootstrap.sh`
+
+#### Scanner Implementation
+
+The scanner extracts metadata from COBOL programs and JCL jobs:
 
 ```python
 #!/usr/bin/env python3
@@ -953,12 +978,28 @@ Also add to `.github/copilot-mcp.json` (Coding Agent MCP config):
 
 ### Quick Validation Script
 
-Create `mcp-servers/mainframe-context/validate.js`:
+The validator is included at `mcp-servers/mainframe-context/validate.js`. Run it to verify your metadata files:
+
+**Windows (PowerShell):**
+```powershell
+cd mcp-servers\mainframe-context
+node validate.js --data-dir ..\..\data
+```
+
+**Linux/macOS (Bash):**
+```bash
+cd mcp-servers/mainframe-context
+node validate.js --data-dir ../../data
+```
+
+> **Expected output:** `✅ All validation checks passed`
+
+The validator checks that all required JSON files exist and contain valid entries:
 
 ```javascript
 /**
  * Validates that the MCP server data files are present and well-formed.
- * Run: node validate.js
+ * Run: node validate.js --data-dir ../../data
  */
 import { readFileSync } from "fs";
 import { resolve } from "path";

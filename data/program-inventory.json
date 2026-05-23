@@ -1,86 +1,81 @@
 [
   {
-    "programId": "CUSTMGMT",
-    "fileName": "CUSTMGMT.cbl",
-    "linesOfCode": 165,
     "businessDomain": "Customer Management",
-    "complexity": 3,
-    "calls": ["CUSTVAL"],
-    "calledBy": ["CUSTMENU"],
-    "copybooks": ["CUST-REC"],
-    "files": ["PROD.CUST.MASTER"],
-    "sqlTables": [],
+    "calledBy": [],
+    "calls": [],
     "cicsCommands": [],
-    "migrationStatus": "pending"
-  },
-  {
-    "programId": "CUSTVAL",
-    "fileName": "CUSTVAL.cbl",
-    "linesOfCode": 80,
-    "businessDomain": "Customer Management",
     "complexity": 1,
-    "calls": [],
-    "calledBy": ["CUSTMGMT"],
-    "copybooks": ["CUST-REC"],
-    "files": [],
-    "sqlTables": [],
-    "cicsCommands": [],
-    "migrationStatus": "pending"
-  },
-  {
-    "programId": "CUSTLOAD",
+    "copybooks": [
+      "CUST-REC"
+    ],
     "fileName": "CUSTLOAD.cbl",
-    "linesOfCode": 320,
-    "businessDomain": "Customer Management",
-    "complexity": 2,
-    "calls": ["CUSTVAL"],
-    "calledBy": [],
-    "copybooks": ["CUST-REC"],
-    "files": ["PROD.CUST.MASTER", "PROD.CUST.DAILY.UPDATES"],
-    "sqlTables": [],
-    "cicsCommands": [],
-    "migrationStatus": "pending"
+    "files": [
+      "INPUT",
+      "MASTER"
+    ],
+    "linesOfCode": 100,
+    "migrationStatus": "pending",
+    "programId": "CUSTLOAD",
+    "sqlTables": []
   },
   {
-    "programId": "CUSTRPT",
+    "businessDomain": "Customer Management",
+    "calledBy": [],
+    "calls": [
+      "CUSTVAL"
+    ],
+    "cicsCommands": [],
+    "complexity": 1,
+    "copybooks": [
+      "CUST-REC"
+    ],
+    "fileName": "CUSTMGMT.cbl",
+    "files": [
+      "PROD.CUST.MASTER"
+    ],
+    "linesOfCode": 157,
+    "migrationStatus": "pending",
+    "programId": "CUSTMGMT",
+    "sqlTables": []
+  },
+  {
+    "businessDomain": "Customer Management",
+    "calledBy": [],
+    "calls": [],
+    "cicsCommands": [],
+    "complexity": 1,
+    "copybooks": [
+      "CUST-REC"
+    ],
     "fileName": "CUSTRPT.cbl",
-    "linesOfCode": 210,
+    "files": [
+      "INPUT",
+      "REPORT"
+    ],
+    "linesOfCode": 164,
+    "migrationStatus": "pending",
+    "programId": "CUSTRPT",
+    "sqlTables": []
+  },
+  {
     "businessDomain": "Customer Management",
-    "complexity": 2,
-    "calls": [],
-    "calledBy": [],
-    "copybooks": ["CUST-REC"],
-    "files": ["PROD.CUST.MASTER"],
-    "sqlTables": [],
+    "calledBy": [
+      "CUSTMGMT",
+      "CUSTVAL"
+    ],
+    "calls": [
+      "CUSTVAL"
+    ],
     "cicsCommands": [],
-    "migrationStatus": "pending"
-  },
-  {
-    "programId": "CUSTMENU",
-    "fileName": "CUSTMENU.cbl",
-    "linesOfCode": 450,
-    "businessDomain": "Customer Management",
-    "complexity": 3,
-    "calls": ["CUSTMGMT", "CUSTINQ"],
-    "calledBy": [],
-    "copybooks": ["CUST-REC"],
+    "complexity": 1,
+    "copybooks": [
+      "CUST-REC"
+    ],
+    "fileName": "CUSTVAL.cbl",
     "files": [],
-    "sqlTables": [],
-    "cicsCommands": ["SEND", "RECEIVE", "XCTL"],
-    "migrationStatus": "pending"
-  },
-  {
-    "programId": "CUSTINQ",
-    "fileName": "CUSTINQ.cbl",
-    "linesOfCode": 280,
-    "businessDomain": "Customer Management",
-    "complexity": 2,
-    "calls": [],
-    "calledBy": ["CUSTMENU"],
-    "copybooks": ["CUST-REC"],
-    "files": ["PROD.CUST.MASTER"],
-    "sqlTables": [],
-    "cicsCommands": ["SEND", "RECEIVE", "READ"],
-    "migrationStatus": "pending"
+    "linesOfCode": 59,
+    "migrationStatus": "pending",
+    "programId": "CUSTVAL",
+    "sqlTables": []
   }
 ]

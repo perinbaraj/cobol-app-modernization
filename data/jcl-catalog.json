@@ -1,14 +1,28 @@
 [
   {
-    "jobName": "CUSTBAT",
+    "datasets": [
+      "PROD.CUST.DAILY.UPDATES",
+      "PROD.CUST.ERRORS",
+      "PROD.CUST.MASTER",
+      "PROD.LOADLIB"
+    ],
+    "dependencies": [
+      "COMPLETE",
+      "CUSTEXTRACT",
+      "FIRST",
+      "MUST"
+    ],
     "fileName": "CUSTBAT.jcl",
-    "programs": ["CUSTLOAD", "CUSTVAL", "CUSTRPT"],
+    "jobName": "CUSTBAT",
+    "migrationStatus": "pending",
     "procedures": [],
-    "datasets": ["PROD.CUST.MASTER", "PROD.CUST.DAILY.UPDATES", "PROD.CUST.ERRORS"],
-    "stepCount": 3,
+    "programs": [
+      "CUSTLOAD",
+      "CUSTRPT",
+      "CUSTVAL"
+    ],
     "schedule": "DAILY 06:00 UTC",
-    "sla": "Complete by 08:00 UTC",
-    "dependencies": ["CUSTEXTRACT"],
-    "migrationStatus": "pending"
+    "sla": "COMPLETE BY 08:00 UTC",
+    "stepCount": 3
   }
 ]

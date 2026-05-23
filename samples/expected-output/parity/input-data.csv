@@ -1,0 +1,79 @@
+# Parity Test Input Data
+# Format: testId,operation,customerId,customerName,customerAddress,customerCity,customerState,customerZip,balance,status,description
+# Operations: A=Add, U=Update, D=Delete, I=Inquiry
+# Status: A=Active, I=Inactive, S=Suspended
+
+# ============================================================
+# Normal Operations
+# ============================================================
+TC001,A,CUST000001,John Smith,123 Main Street,New York,NY,10001,5000.00,A,Normal add - below discount threshold
+TC002,U,CUST000001,John Smith Updated,456 Oak Avenue,Los Angeles,CA,90001,8000.00,A,Normal update - below discount threshold
+TC003,I,CUST000001,,,,,,,,Normal inquiry - existing customer
+TC004,D,CUST000001,,,,,,,,Normal delete - existing customer
+
+# ============================================================
+# Discount Boundary Tests (5% discount for balance > 10000)
+# ============================================================
+TC005,A,CUST000010,Mary Boundary,100 Edge Lane,Chicago,IL,60601,9999.99,A,Boundary - just below discount threshold (no discount)
+TC006,A,CUST000011,Bob Threshold,200 Line Road,Dallas,TX,75201,10000.00,A,Boundary - exactly at threshold (no discount)
+TC007,A,CUST000012,Alice Above,300 Upper Way,Miami,FL,33101,10000.01,A,Boundary - just above threshold (5% discount applies)
+TC008,A,CUST000013,Large Balance,400 Premium St,Seattle,WA,98101,50000.00,A,High balance - significant discount
+
+# ============================================================
+# Maximum Precision Decimals
+# ============================================================
+TC009,A,CUST000020,Max Decimal,500 Precision Dr,Boston,MA,02101,9999999.99,A,Max COBOL decimal value PIC S9(7)V99
+TC010,A,CUST000021,Mid Decimal,501 Number Ave,Denver,CO,80201,1234567.89,A,Large decimal with full precision
+TC011,A,CUST000022,Small Decimal,502 Tiny Blvd,Austin,TX,78701,0.01,A,Minimum positive decimal value
+TC012,A,CUST000023,Zero Balance,503 Empty Way,Phoenix,AZ,85001,0.00,A,Zero balance
+
+# ============================================================
+# Maximum Length Strings
+# ============================================================
+TC013,A,CUST123456,Maximum Name Length Exactly30,1234567890 Very Long Address That Fills All 40,ExactTwentyCharCity,CA,1234567890,15000.00,A,Max length all fields - with discount
+TC014,A,CUSTMAXLEN,Aa,B,C,NY,1,100.00,A,Minimum length strings
+
+# ============================================================
+# Empty/Space-Filled Fields (COBOL spaces)
+# ============================================================
+TC015,A,CUST000030,,789 Blank Name St,Columbus,OH,43201,2500.00,A,Empty name field (COBOL spaces)
+TC016,A,CUST000031,Spacey Person,   ,Cleveland,OH,44101,3500.00,A,Space-only address
+TC017,A,CUST000032,City Blank,999 No City Dr,,TX,75001,4500.00,A,Empty city field
+TC018,A,CUST000033,Zip Blank,888 No Zip Lane,Houston,TX,,6000.00,A,Empty zip field
+
+# ============================================================
+# All Status Codes
+# ============================================================
+TC019,A,CUST000040,Active Customer,111 Status St,Atlanta,GA,30301,7500.00,A,Status Active
+TC020,A,CUST000041,Inactive Customer,222 Status St,Tampa,FL,33601,8500.00,I,Status Inactive
+TC021,A,CUST000042,Suspended Customer,333 Status St,Orlando,FL,32801,11000.00,S,Status Suspended - with discount
+
+# ============================================================
+# Error Scenarios
+# ============================================================
+TC022,A,CUST000050,Error Test Customer,444 Error Ln,Portland,OR,97201,20000.00,A,Setup for duplicate test
+TC023,A,CUST000050,Duplicate Attempt,555 Dup St,Reno,NV,89501,5000.00,A,Error - customer already exists (1002)
+TC024,U,CUST999999,,,,,,,,Error - customer not found for update (2001)
+TC025,D,CUST999998,,,,,,,,Error - customer not found for delete (3001)
+TC026,I,CUST999997,,,,,,,,Error - customer not found for inquiry (4001)
+TC027,X,CUST000060,Invalid Op,666 Invalid Rd,Las Vegas,NV,89101,1000.00,A,Error - invalid transaction type (1001)
+
+# ============================================================
+# Complex Discount Calculations
+# ============================================================
+TC028,A,CUST000070,Discount Calc 1,777 Math Way,Sacramento,CA,95814,15000.00,A,15000 * 0.05 = 750 discount -> 14250.00
+TC029,A,CUST000071,Discount Calc 2,778 Math Way,Fresno,CA,93650,100000.00,A,100000 * 0.05 = 5000 discount -> 95000.00
+TC030,A,CUST000072,Odd Discount,779 Math Way,San Jose,CA,95101,10000.51,A,10000.51 * 0.05 = 500.03 discount -> 9500.48
+
+# ============================================================
+# Update with Discount State Changes
+# ============================================================
+TC031,A,CUST000080,Start Low,880 Growth St,San Diego,CA,92101,5000.00,A,Initial add below threshold
+TC032,U,CUST000080,Now High,880 Growth St,San Diego,CA,92101,25000.00,A,Update to above threshold - discount applies
+TC033,A,CUST000081,Start High,881 Shrink St,Long Beach,CA,90801,30000.00,A,Initial add above threshold (discounted)
+TC034,U,CUST000081,Now Low,881 Shrink St,Long Beach,CA,90801,8000.00,A,Update to below threshold - no discount
+
+# ============================================================
+# Negative Balance (edge case)
+# ============================================================
+TC035,A,CUST000090,Credit Balance,990 Credit Ave,Anaheim,CA,92801,-500.00,A,Negative balance (credit)

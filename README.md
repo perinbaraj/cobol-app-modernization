@@ -1,6 +1,9 @@
-# Mainframe Modernization — GitHub Copilot Enablement Kit
+# Acme Corp Mainframe Modernization — GitHub Copilot Enablement Kit
 
-> A complete, ready-to-run toolkit for modernizing COBOL mainframe applications to Java 17 + React 18.2 using GitHub Copilot's full feature set.
+[![CI](https://github.com/acme-corp/cobol-app-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/acme-corp/cobol-app-modernization/actions/workflows/ci.yml)
+[![Metadata Validation](https://github.com/acme-corp/cobol-app-modernization/actions/workflows/validate-metadata.yml/badge.svg)](https://github.com/acme-corp/cobol-app-modernization/actions/workflows/validate-metadata.yml)
+
+> A complete, ready-to-run toolkit for modernizing Acme Corp's COBOL mainframe applications to Java 17 + React 18.2 using GitHub Copilot's full feature set.
 
 ## Project Context
 
@@ -20,6 +23,22 @@
 ## 🚀 First Time Here? Start With the Quick Start Guide
 
 **👉 Read [`QUICKSTART.md`](./QUICKSTART.md) first** — it walks you through setup and validation in 30 minutes using the included sample COBOL module.
+
+### Quick Validation
+
+Validate your setup instantly:
+
+**Windows (PowerShell):**
+```powershell
+.\scripts\bootstrap.ps1
+```
+
+**Linux/macOS (Bash):**
+```bash
+./scripts/bootstrap.sh
+```
+
+This installs dependencies, validates metadata, and confirms your environment is ready.
 
 ---
 
@@ -47,17 +66,27 @@ This artifact kit is designed for **developers performing the migration**. It in
 ## Artifact Map
 
 ```
-mainframe-modernization/
+cobol-app-modernization/
 │
 ├── README.md ◄── You are here
 ├── QUICKSTART.md                   # 👉 START HERE — first 30 minutes
 ├── architecture-diagram.md         # Mermaid visuals — all phases
 │
+├── .github/                        # GitHub configuration
+│   ├── agents/                     #   Custom Copilot agents
+│   ├── skills/                     #   Custom Copilot skills
+│   ├── workflows/                  #   CI/CD workflows
+│   ├── ISSUE_TEMPLATE/             #   Issue templates for migration tasks
+│   └── copilot-instructions.md     #   Project-level Copilot config
+│
 ├── samples/                        # Sample COBOL module for testing
 │   ├── cobol/CUSTMGMT.cbl         #   Sample program (165 LOC)
 │   ├── cobol/CUST-REC.cpy         #   Sample copybook
 │   ├── jcl/CUSTBAT.jcl            #   Sample JCL job (3 steps)
-│   └── bms/CUSTINQ.bms            #   Sample BMS screen map
+│   ├── bms/CUSTINQ.bms            #   Sample BMS screen map
+│   └── expected-output/            #   Golden samples (reference implementations)
+│       ├── java/                   #     Spring Boot service + tests
+│       └── react/                  #     React components + tests
 │
 ├── data/                           # Pre-built MCP metadata (from samples)
 │   ├── program-inventory.json      #   6 sample program entries
@@ -69,10 +98,13 @@ mainframe-modernization/
 │   ├── mainframe-context-server.md #   Full setup & integration guide
 │   └── mainframe-context/          #   Working MCP server
 │       ├── package.json            #     npm install ready
-│       └── index.js                #     6 tools implemented
+│       ├── index.js                #     6 tools implemented
+│       └── validate.js             #     Metadata validator
 │
 ├── scripts/                        # Automation scripts
-│   └── (see MCP guide for scanner) #     scan-codebase.py template
+│   ├── bootstrap.ps1               #   Windows setup script
+│   ├── bootstrap.sh                #   Linux/macOS setup script
+│   └── scan-codebase.py            #   COBOL/JCL metadata scanner
 │
 ├── phases/                         # Phase-by-phase migration guides
 │   ├── phase-1-discovery.md        #   Codebase analysis & inventory
@@ -102,9 +134,6 @@ mainframe-modernization/
 │   ├── copybook-mapper-skill.md
 │   ├── vsam-to-sql-skill.md
 │   └── test-parity-skill.md
-│
-├── mcp-servers/                    # Model Context Protocol configs
-│   └── mainframe-context-server.md
 │
 └── copilot-config/                 # Project-level Copilot settings
     ├── copilot-instructions.md

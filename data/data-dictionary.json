@@ -1,24 +1,95 @@
 [
   {
-    "name": "PROD.CUST.MASTER",
-    "type": "VSAM-KSDS",
-    "copybook": "CUST-REC",
-    "keyFields": ["CUST-ID"],
-    "keyLength": 10,
-    "keyOffset": 0,
-    "recordSize": 250,
-    "estimatedRecords": 5000000,
+    "copybook": null,
+    "estimatedRecords": null,
+    "keyFields": [],
+    "name": "INPUT",
+    "recordSize": null,
+    "referencedBy": [
+      "CUSTLOAD",
+      "CUSTRPT"
+    ],
     "targetDatabase": "Azure SQL",
-    "targetTable": "customers"
+    "targetTable": "input",
+    "type": "Sequential"
   },
   {
-    "name": "PROD.CUST.DAILY.UPDATES",
-    "type": "Sequential",
-    "copybook": "CUST-REC",
+    "copybook": null,
+    "estimatedRecords": null,
     "keyFields": [],
-    "recordSize": 250,
-    "estimatedRecords": 50000,
+    "name": "MASTER",
+    "recordSize": null,
+    "referencedBy": [
+      "CUSTLOAD"
+    ],
     "targetDatabase": "Azure SQL",
-    "targetTable": "customer_updates_staging"
+    "targetTable": "master",
+    "type": "VSAM-KSDS"
+  },
+  {
+    "copybook": null,
+    "estimatedRecords": null,
+    "keyFields": [],
+    "name": "PROD.CUST.DAILY.UPDATES",
+    "recordSize": null,
+    "referencedBy": [
+      "CUSTBAT"
+    ],
+    "targetDatabase": "Azure SQL",
+    "targetTable": "updates",
+    "type": "Sequential"
+  },
+  {
+    "copybook": null,
+    "estimatedRecords": null,
+    "keyFields": [],
+    "name": "PROD.CUST.ERRORS",
+    "recordSize": null,
+    "referencedBy": [
+      "CUSTBAT"
+    ],
+    "targetDatabase": "Azure SQL",
+    "targetTable": "errors",
+    "type": "Sequential"
+  },
+  {
+    "copybook": null,
+    "estimatedRecords": null,
+    "keyFields": [],
+    "name": "PROD.CUST.MASTER",
+    "recordSize": null,
+    "referencedBy": [
+      "CUSTBAT",
+      "CUSTMGMT"
+    ],
+    "targetDatabase": "Azure SQL",
+    "targetTable": "master",
+    "type": "VSAM-KSDS"
+  },
+  {
+    "copybook": null,
+    "estimatedRecords": null,
+    "keyFields": [],
+    "name": "PROD.LOADLIB",
+    "recordSize": null,
+    "referencedBy": [
+      "CUSTBAT"
+    ],
+    "targetDatabase": "Azure SQL",
+    "targetTable": "loadlib",
+    "type": "PDS-LoadLib"
+  },
+  {
+    "copybook": null,
+    "estimatedRecords": null,
+    "keyFields": [],
+    "name": "REPORT",
+    "recordSize": null,
+    "referencedBy": [
+      "CUSTRPT"
+    ],
+    "targetDatabase": "Azure SQL",
+    "targetTable": "report",
+    "type": "Sequential"
   }
 ]

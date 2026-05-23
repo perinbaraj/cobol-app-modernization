@@ -1,0 +1,79 @@
+# Parity Test Expected Output Data (COBOL-style)
+# Format: testId,expectedReturnCode,expectedErrorMsg,expectedBalance,expectedStatus,expectedDiscountApplied,notes
+# Return Codes: 0=Success, 1001=Invalid trans, 1002=Already exists, 2001/3001/4001=Not found
+# Balance shown is the final balance after discount calculation (if applicable)
+
+# ============================================================
+# Normal Operations
+# ============================================================
+TC001,0,,5000.00,A,N,Normal add - no discount (balance 5000 <= 10000)
+TC002,0,,8000.00,A,N,Normal update - no discount (balance 8000 <= 10000)
+TC003,0,,8000.00,A,N,Normal inquiry - returns stored balance
+TC004,0,,,,N,Normal delete - success no balance returned
+
+# ============================================================
+# Discount Boundary Tests
+# ============================================================
+TC005,0,,9999.99,A,N,Balance 9999.99 <= 10000 - no discount applied
+TC006,0,,10000.00,A,N,Balance 10000.00 exactly at threshold - no discount (> not >=)
+TC007,0,,9500.01,A,Y,Balance 10000.01 > 10000 - 5% discount: 10000.01 * 0.05 = 500.00 -> 9500.01
+TC008,0,,47500.00,A,Y,Balance 50000.00 > 10000 - 5% discount: 50000 * 0.05 = 2500 -> 47500.00
+
+# ============================================================
+# Maximum Precision Decimals
+# ============================================================
+TC009,0,,9499999.99,A,Y,Max decimal 9999999.99 > 10000 - 5% discount: 499999.9995 rounded to 500000.00 -> 9499999.99
+TC010,0,,1172839.50,A,Y,Balance 1234567.89 > 10000 - 5% discount: 61728.39 -> 1172839.50
+TC011,0,,0.01,A,N,Balance 0.01 <= 10000 - no discount
+TC012,0,,0.00,A,N,Balance 0.00 <= 10000 - no discount
+
+# ============================================================
+# Maximum Length Strings
+# ============================================================
+TC013,0,,14250.00,A,Y,Balance 15000 > 10000 - 5% discount: 750.00 -> 14250.00 (strings preserved)
+TC014,0,,100.00,A,N,Balance 100 <= 10000 - no discount (min length strings preserved)
+
+# ============================================================
+# Empty/Space-Filled Fields (COBOL equivalent)
+# ============================================================
+TC015,0,,2500.00,A,N,Empty name treated as spaces - balance 2500 no discount
+TC016,0,,3500.00,A,N,Space-only address preserved - balance 3500 no discount
+TC017,0,,4500.00,A,N,Empty city preserved - balance 4500 no discount
+TC018,0,,6000.00,A,N,Empty zip preserved - balance 6000 no discount
+
+# ============================================================
+# All Status Codes
+# ============================================================
+TC019,0,,7500.00,A,N,Status A (Active) - balance 7500 no discount
+TC020,0,,8500.00,I,N,Status I (Inactive) - balance 8500 no discount
+TC021,0,,10450.00,S,Y,Status S (Suspended) - balance 11000 > 10000 - discount 550 -> 10450.00
+
+# ============================================================
+# Error Scenarios
+# ============================================================
+TC022,0,,19000.00,A,Y,Setup customer - balance 20000 > 10000 - discount 1000 -> 19000.00
+TC023,1002,CUSTOMER ALREADY EXISTS,,,N,Duplicate customer - error code 1002
+TC024,2001,CUSTOMER NOT FOUND,,,N,Update nonexistent - error code 2001
+TC025,3001,CUSTOMER NOT FOUND,,,N,Delete nonexistent - error code 3001
+TC026,4001,CUSTOMER NOT FOUND,,,N,Inquiry nonexistent - error code 4001
+TC027,1001,INVALID TRANSACTION TYPE,,,N,Invalid operation X - error code 1001
+
+# ============================================================
+# Complex Discount Calculations
+# ============================================================
+TC028,0,,14250.00,A,Y,Balance 15000 > 10000 - 5% discount: 750.00 -> 14250.00
+TC029,0,,95000.00,A,Y,Balance 100000 > 10000 - 5% discount: 5000.00 -> 95000.00
+TC030,0,,9500.48,A,Y,Balance 10000.51 > 10000 - 5% discount: 500.03 (rounded) -> 9500.48
+
+# ============================================================
+# Update with Discount State Changes
+# ============================================================
+TC031,0,,5000.00,A,N,Initial add at 5000 - no discount
+TC032,0,,23750.00,A,Y,Update to 25000 > 10000 - 5% discount: 1250 -> 23750.00
+TC033,0,,28500.00,A,Y,Initial add at 30000 > 10000 - 5% discount: 1500 -> 28500.00
+TC034,0,,8000.00,A,N,Update to 8000 <= 10000 - no discount applied
+
+# ============================================================
+# Negative Balance (edge case)
+# ============================================================
+TC035,0,,-500.00,A,N,Negative balance -500 <= 10000 - no discount

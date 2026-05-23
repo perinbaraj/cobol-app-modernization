@@ -1,6 +1,6 @@
 # Copilot Configuration: Project Instructions
 
-> Template for `.github/copilot-instructions.md` — the project-level instruction file that customizes Copilot's behavior for the the client migration project.
+> Template for `.github/copilot-instructions.md` — the project-level instruction file that customizes Copilot's behavior for the Acme Corp migration project.
 
 ---
 
@@ -13,7 +13,7 @@ Copy the content below into `.github/copilot-instructions.md` at the root of you
 ### `.github/copilot-instructions.md`
 
 ```markdown
-# the client Mainframe Modernization — Copilot Instructions
+# Acme Corp Mainframe Modernization — Copilot Instructions
 
 ## Project Context
 This repository contains code being migrated from IBM z/OS mainframe (COBOL) to modern Java 17 + React 18.2. The migration involves 937 COBOL programs (3.38M lines of code), 15,250 JCL jobs, and associated VSAM/DB2 data stores.

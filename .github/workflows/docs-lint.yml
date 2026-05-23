@@ -1,0 +1,150 @@
+# Documentation Linting
+# Checks markdown files for broken links and placeholder text
+
+name: Docs Lint
+
+on:
+  push:
+    paths:
+      - '**/*.md'
+  pull_request:
+    paths:
+      - '**/*.md'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lint-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install markdown-link-check
+        run: npm install -g markdown-link-check
+
+      - name: Check for broken internal links
+        run: |
+          echo "## Internal Link Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          ERRORS=0
+          
+          # Find all markdown files
+          for file in $(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*"); do
+            # Check for broken internal links (relative paths only)
+            BROKEN_LINKS=$(grep -oE '\[([^\]]+)\]\(([^)]+)\)' "$file" | \
+              grep -v 'http://' | grep -v 'https://' | grep -v '#' || true)
+            
+            if [ -n "$BROKEN_LINKS" ]; then
+              # Verify each internal link exists
+              while IFS= read -r link; do
+                # Extract the path from the markdown link
+                PATH_PART=$(echo "$link" | sed -E 's/\[([^\]]+)\]\(([^)]+)\)/\2/' | cut -d'#' -f1)
+                
+                if [ -n "$PATH_PART" ]; then
+                  # Resolve relative to the file's directory
+                  FILE_DIR=$(dirname "$file")
+                  FULL_PATH="$FILE_DIR/$PATH_PART"
+                  
+                  if [ ! -e "$FULL_PATH" ]; then
+                    echo "❌ $file: Broken link to $PATH_PART" >> $GITHUB_STEP_SUMMARY
+                    ERRORS=$((ERRORS + 1))
+                  fi
+                fi
+              done <<< "$BROKEN_LINKS"
+            fi
+          done
+          
+          if [ $ERRORS -eq 0 ]; then
+            echo "✅ No broken internal links found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Found $ERRORS broken link(s)**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check for placeholder text
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Placeholder Text Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          WARNINGS=0
+          
+          # Common placeholder patterns to detect
+          PLACEHOLDERS=(
+            "TODO"
+            "FIXME"
+            "XXX"
+            "TBD"
+            "PLACEHOLDER"
+            "INSERT.*HERE"
+            "\[your.*\]"
+            "\{your.*\}"
+            "<your.*>"
+            "Lorem ipsum"
+            "the client"
+            "ACME Corp"
+            "example\.com"
+            "foo@bar"
+          )
+          
+          for file in $(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*"); do
+            for pattern in "${PLACEHOLDERS[@]}"; do
+              MATCHES=$(grep -inE "$pattern" "$file" 2>/dev/null | head -3 || true)
+              if [ -n "$MATCHES" ]; then
+                echo "⚠️ $file: Contains '$pattern'" >> $GITHUB_STEP_SUMMARY
+                WARNINGS=$((WARNINGS + 1))
+              fi
+            done
+          done
+          
+          if [ $WARNINGS -eq 0 ]; then
+            echo "✅ No placeholder text detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Found $WARNINGS file(s) with potential placeholder text**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "_Note: Some placeholders may be intentional (e.g., in templates). Review and update if needed._" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check markdown formatting
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Formatting Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          ISSUES=0
+          
+          for file in $(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*"); do
+            # Check for trailing whitespace
+            if grep -qE ' +$' "$file" 2>/dev/null; then
+              echo "⚠️ $file: Has trailing whitespace" >> $GITHUB_STEP_SUMMARY
+              ISSUES=$((ISSUES + 1))
+            fi
+            
+            # Check for multiple consecutive blank lines
+            if grep -qzE '\n\n\n' "$file" 2>/dev/null; then
+              echo "⚠️ $file: Has multiple consecutive blank lines" >> $GITHUB_STEP_SUMMARY
+              ISSUES=$((ISSUES + 1))
+            fi
+          done
+          
+          if [ $ISSUES -eq 0 ]; then
+            echo "✅ No formatting issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Summary
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "Documentation linting complete. Review any warnings above." >> $GITHUB_STEP_SUMMARY

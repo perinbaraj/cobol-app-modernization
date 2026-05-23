@@ -1,0 +1,210 @@
+# ============================================================================
+# GitHub Actions Workflow: customer-batch.yml
+# Converted from: CUSTBAT.jcl
+# Purpose: Daily customer batch processing
+# Schedule: Daily 06:00 UTC (matching JCL SLA)
+# SLA: Complete by 08:00 UTC
+# ============================================================================
+
+name: Customer Batch Processing
+
+on:
+  # Scheduled run - matches JCL SCHEDULE: DAILY 06:00 UTC
+  schedule:
+    - cron: '0 6 * * *'
+  
+  # Manual trigger for ad-hoc runs
+  workflow_dispatch:
+    inputs:
+      skip_validation:
+        description: 'Skip validation step (STEP2)'
+        required: false
+        default: 'false'
+        type: boolean
+      skip_report:
+        description: 'Skip report generation (STEP3)'
+        required: false
+        default: 'false'
+        type: boolean
+      dry_run:
+        description: 'Dry run mode (no database changes)'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  JAVA_VERSION: '17'
+  BATCH_JOB_NAME: 'CustomerBatch'
+  # Timeout matches JCL TIME=(,30) - 30 minute limit
+  JOB_TIMEOUT_MINUTES: 30
+
+jobs:
+  customer-batch:
+    name: Customer Batch Job
+    runs-on: ubuntu-latest
+    timeout-minutes: 120  # SLA buffer
+    
+    # Ensure only one batch job runs at a time
+    concurrency:
+      group: customer-batch-${{ github.ref }}
+      cancel-in-progress: false
+    
+    outputs:
+      step1_status: ${{ steps.custload.outcome }}
+      step2_status: ${{ steps.custval.outcome }}
+      step3_status: ${{ steps.custrpt.outcome }}
+      records_processed: ${{ steps.custload.outputs.records_processed }}
+      validation_errors: ${{ steps.custval.outputs.error_count }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Generate Batch ID
+        id: batch-id
+        run: |
+          BATCH_ID=$(uuidgen)
+          echo "batch_id=$BATCH_ID" >> $GITHUB_OUTPUT
+          echo "::notice::Batch ID: $BATCH_ID"
+      
+      # -----------------------------------------------------------------------
+      # STEP1: Load Daily Customer Updates
+      # JCL: //STEP1 EXEC PGM=CUSTLOAD
+      # Condition: Always runs
+      # -----------------------------------------------------------------------
+      - name: 'STEP1: Load Customer Updates (CUSTLOAD)'
+        id: custload
+        run: |
+          echo "::group::STEP1 - CUSTLOAD"
+          
+          ./mvnw -q exec:java \
+            -Dexec.mainClass="com.acme.customer.batch.CustomerLoadStep" \
+            -Dexec.args="--batch-id=${{ steps.batch-id.outputs.batch_id }} \
+                         --input=staging \
+                         --dry-run=${{ inputs.dry_run || 'false' }}"
+          
+          # Capture output metrics
+          RECORDS_PROCESSED=$(cat target/step1-metrics.txt | grep records_processed | cut -d'=' -f2)
+          echo "records_processed=$RECORDS_PROCESSED" >> $GITHUB_OUTPUT
+          
+          echo "::endgroup::"
+        env:
+          DB_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+          AZURE_STORAGE_CONNECTION: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+      
+      # -----------------------------------------------------------------------
+      # STEP2: Validate Customer Data
+      # JCL: //STEP2 EXEC PGM=CUSTVAL,COND=(0,NE,STEP1)
+      # Condition: Run only if STEP1 return code = 0
+      # -----------------------------------------------------------------------
+      - name: 'STEP2: Validate Customer Data (CUSTVAL)'
+        id: custval
+        # COND=(0,NE,STEP1) means: skip if STEP1 RC != 0
+        if: ${{ steps.custload.outcome == 'success' && inputs.skip_validation != 'true' }}
+        run: |
+          echo "::group::STEP2 - CUSTVAL"
+          
+          ./mvnw -q exec:java \
+            -Dexec.mainClass="com.acme.customer.batch.CustomerValidationStep" \
+            -Dexec.args="--batch-id=${{ steps.batch-id.outputs.batch_id }}"
+          
+          # Capture validation metrics
+          ERROR_COUNT=$(cat target/step2-metrics.txt | grep error_count | cut -d'=' -f2)
+          echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          
+          # Set step outcome based on error threshold
+          if [ "$ERROR_COUNT" -gt 100 ]; then
+            echo "::error::Validation error threshold exceeded: $ERROR_COUNT errors"
+            exit 4  # Maps to JCL RC=4
+          fi
+          
+          echo "::endgroup::"
+        env:
+          DB_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+      
+      # -----------------------------------------------------------------------
+      # STEP3: Generate Daily Report
+      # JCL: //STEP3 EXEC PGM=CUSTRPT,COND=(4,LT,STEP2)
+      # Condition: Run only if STEP2 return code < 4 (warnings OK, errors stop)
+      # -----------------------------------------------------------------------
+      - name: 'STEP3: Generate Daily Report (CUSTRPT)'
+        id: custrpt
+        # COND=(4,LT,STEP2) means: skip if STEP2 RC >= 4
+        if: ${{ (steps.custval.outcome == 'success' || steps.custval.outcome == 'skipped') && inputs.skip_report != 'true' }}
+        run: |
+          echo "::group::STEP3 - CUSTRPT"
+          
+          ./mvnw -q exec:java \
+            -Dexec.mainClass="com.acme.customer.batch.CustomerReportStep" \
+            -Dexec.args="--batch-id=${{ steps.batch-id.outputs.batch_id }} \
+                         --output=reports/customer-daily-${{ github.run_id }}.pdf"
+          
+          echo "::endgroup::"
+        env:
+          DB_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+      
+      - name: Upload Report Artifact
+        if: steps.custrpt.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-daily-report-${{ github.run_id }}
+          path: reports/customer-daily-*.pdf
+          retention-days: 30
+      
+      - name: Generate Job Summary
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## Customer Batch Job Summary
+          
+          | Step | Program | Status | Details |
+          |------|---------|--------|---------|
+          | STEP1 | CUSTLOAD | ${{ steps.custload.outcome }} | Records: ${{ steps.custload.outputs.records_processed || 'N/A' }} |
+          | STEP2 | CUSTVAL | ${{ steps.custval.outcome }} | Errors: ${{ steps.custval.outputs.error_count || 'N/A' }} |
+          | STEP3 | CUSTRPT | ${{ steps.custrpt.outcome }} | Report generated |
+          
+          **Batch ID:** \`${{ steps.batch-id.outputs.batch_id }}\`
+          **Triggered by:** ${{ github.event_name }}
+          **Duration:** Started at ${{ github.event.repository.updated_at }}
+          EOF
+  
+  # -------------------------------------------------------------------------
+  # Error Notification Job
+  # Sends alerts on batch failure
+  # -------------------------------------------------------------------------
+  notify-on-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: customer-batch
+    if: failure()
+    
+    steps:
+      - name: Send Teams Notification
+        uses: jdcargile/ms-teams-notification@v1.4
+        with:
+          github-token: ${{ github.token }}
+          ms-teams-webhook-uri: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          notification-summary: '❌ Customer Batch Job Failed'
+          notification-color: 'dc3545'
+          timezone: 'UTC'
+      
+      - name: Create Incident Ticket
+        if: ${{ needs.customer-batch.outputs.step1_status == 'failure' }}
+        run: |
+          echo "::error::Critical failure in STEP1 (CUSTLOAD) - creating incident"
+          # Integration with ServiceNow/PagerDuty would go here
+          curl -X POST "${{ secrets.INCIDENT_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "severity": "P2",
+              "title": "Customer Batch Job Failed - CUSTLOAD",
+              "batch_id": "${{ needs.customer-batch.outputs.batch_id }}",
+              "run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }' || true

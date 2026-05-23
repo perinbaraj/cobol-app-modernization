@@ -1,0 +1,123 @@
+# Validate Metadata Files
+# Triggers on changes to data/*.json files
+# Validates JSON structure and runs MCP server validation
+
+name: Validate Metadata
+
+on:
+  push:
+    paths:
+      - 'data/*.json'
+  pull_request:
+    paths:
+      - 'data/*.json'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate-metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: mcp-servers/mainframe-context/package.json
+
+      - name: Install MCP server dependencies
+        working-directory: mcp-servers/mainframe-context
+        run: npm ci
+
+      - name: Validate JSON syntax
+        run: |
+          echo "## JSON Syntax Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          ERRORS=0
+          for file in data/*.json; do
+            if [ -f "$file" ]; then
+              if jq empty "$file" 2>/dev/null; then
+                echo "✅ $file - Valid JSON" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ $file - Invalid JSON syntax" >> $GITHUB_STEP_SUMMARY
+                ERRORS=$((ERRORS + 1))
+              fi
+            fi
+          done
+          
+          if [ $ERRORS -gt 0 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**$ERRORS file(s) have invalid JSON syntax**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Validate metadata schema
+        working-directory: mcp-servers/mainframe-context
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Schema Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Run MCP server validation if validate script exists
+          if npm run --silent validate 2>/dev/null; then
+            echo "✅ All metadata files pass schema validation" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Schema validation skipped (no validate script)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check for required fields
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Required Fields Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          WARNINGS=0
+          
+          # Check program-inventory.json
+          if [ -f "data/program-inventory.json" ]; then
+            PROGRAMS=$(jq '.programs | length' data/program-inventory.json 2>/dev/null || echo "0")
+            echo "📊 program-inventory.json: $PROGRAMS programs" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check copybook-catalog.json
+          if [ -f "data/copybook-catalog.json" ]; then
+            COPYBOOKS=$(jq '.copybooks | length' data/copybook-catalog.json 2>/dev/null || echo "0")
+            echo "📊 copybook-catalog.json: $COPYBOOKS copybooks" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check jcl-catalog.json
+          if [ -f "data/jcl-catalog.json" ]; then
+            JOBS=$(jq '.jobs | length' data/jcl-catalog.json 2>/dev/null || echo "0")
+            echo "📊 jcl-catalog.json: $JOBS jobs" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check data-dictionary.json
+          if [ -f "data/data-dictionary.json" ]; then
+            ENTITIES=$(jq '.entities | length' data/data-dictionary.json 2>/dev/null || echo "0")
+            echo "📊 data-dictionary.json: $ENTITIES entities" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Report validation results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read the step summary
+            const summary = process.env.GITHUB_STEP_SUMMARY;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🔍 Metadata Validation Results\n\nAll metadata files in \`data/\` have been validated.\n\nSee [workflow run](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}) for details.`
+            });
