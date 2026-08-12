@@ -266,12 +266,20 @@ class JclScanner:
         # Extract procedures (EXEC without PGM=)
         procedures = []
         for line in content.split('\n'):
-            if 'EXEC' in line.upper() and 'PGM=' not in line.upper():
-                match = re.search(r'EXEC\s+([A-Z0-9]+)', line, re.IGNORECASE)
-                if match:
-                    proc = match.group(1).upper()
-                    if proc not in procedures and proc not in ['PROC']:
-                        procedures.append(proc)
+            line_upper = line.strip().upper()
+            if line_upper.startswith('//*') or line_upper.startswith('*'):
+                continue
+            match = re.match(r'^//[A-Z0-9@#$]*\s+EXEC\s+(.*)', line_upper)
+            if match:
+                rest = match.group(1).strip()
+                if rest.startswith('PGM='):
+                    continue
+                if rest.startswith('PROC='):
+                    proc_name = re.split(r'[, \t]', rest[5:])[0]
+                else:
+                    proc_name = re.split(r'[, \t]', rest)[0]
+                if re.match(r'^[A-Z][A-Z0-9@#$]{0,7}$', proc_name) and proc_name not in procedures:
+                    procedures.append(proc_name)
 
         # Extract datasets
         datasets = list(set(m.upper() for m in JCL_PATTERNS['dd_dsn'].findall(content) 
@@ -291,10 +299,23 @@ class JclScanner:
 
         # Extract dependencies from comments
         dependencies = []
-        dep_match = JCL_PATTERNS['comment_dependencies'].search(content)
-        if dep_match:
-            dep_str = dep_match.group(1).strip()
-            dependencies = [d.strip().upper() for d in re.split(r'[,\s]+', dep_str) if d.strip()]
+        dep_pattern = re.compile(r'^[/*\s]*(?:DEPENDENCIES|DEPENDENCY|AFTER|PRED|PREDECESSOR)S?:\s*(.*?)(?=(?:^[/*\s]*[A-Z0-9_]+:)|(?:^[^/*])|\Z)', re.IGNORECASE | re.MULTILINE | re.DOTALL)
+        for match in dep_pattern.finditer(content):
+            block = match.group(1).upper()
+            # Clean up continuation comment prefixes
+            block = re.sub(r'^[/*\s]+', ' ', block, flags=re.MULTILINE)
+            for entry in re.split(r'[,;]', block):
+                entry = entry.strip()
+                if not entry:
+                    continue
+                tokens = entry.split()
+                if not tokens:
+                    continue
+                first_token = tokens[0]
+                if first_token in ['NONE', 'N/A', 'NA']:
+                    continue
+                if re.match(r'^[A-Z][A-Z0-9#@$]{0,7}$', first_token) and first_token not in dependencies:
+                    dependencies.append(first_token)
 
         job_data = {
             'jobName': job_name,

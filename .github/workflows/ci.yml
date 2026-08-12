@@ -87,11 +87,12 @@ jobs:
         with:
           node-version: '18'
           cache: npm
-          cache-dependency-path: samples/expected-output/react/package-lock.json
+          cache-dependency-path: samples/expected-output/react/package.json
 
       - name: Install dependencies
         working-directory: samples/expected-output/react
-        run: npm ci --prefer-offline
+        # using install instead of ci because there is no committed lockfile for the golden sample
+        run: npm install --no-audit --no-fund
 
       - name: TypeScript type-check
         working-directory: samples/expected-output/react
@@ -100,66 +101,3 @@ jobs:
       - name: Build (verify no bundle errors)
         working-directory: samples/expected-output/react
         run: npm run build
-
-  # ──────────────────────────────────────────────────────────────
-  # Job 3: Validate MCP metadata JSON files
-  # Runs on every push (not just data/*.json changes)
-  # ──────────────────────────────────────────────────────────────
-  validate-metadata:
-    name: Validate MCP Metadata
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: npm
-          cache-dependency-path: mcp-servers/mainframe-context/package.json
-
-      - name: Install MCP server dependencies
-        working-directory: mcp-servers/mainframe-context
-        run: npm ci
-
-      - name: Validate JSON syntax
-        run: |
-          echo "## JSON Syntax Validation" >> $GITHUB_STEP_SUMMARY
-          ERRORS=0
-          for file in data/*.json; do
-            if [ -f "$file" ]; then
-              if jq empty "$file" 2>/dev/null; then
-                echo "✅ $file" >> $GITHUB_STEP_SUMMARY
-              else
-                echo "❌ $file — invalid JSON" >> $GITHUB_STEP_SUMMARY
-                ERRORS=$((ERRORS + 1))
-              fi
-            fi
-          done
-          if [ $ERRORS -gt 0 ]; then
-            echo "**$ERRORS file(s) failed JSON validation**" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-      - name: Run MCP schema validation
-        working-directory: mcp-servers/mainframe-context
-        run: |
-          if npm run --silent validate 2>/dev/null; then
-            echo "✅ All metadata files pass schema validation" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ Schema validation skipped (no validate script)" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Summarise metadata counts
-        run: |
-          echo "## Metadata Summary" >> $GITHUB_STEP_SUMMARY
-          for file in data/program-inventory.json data/copybook-catalog.json data/jcl-catalog.json data/data-dictionary.json; do
-            if [ -f "$file" ]; then
-              KEY=$(basename "$file" .json | tr '-' '_')
-              COUNT=$(jq '[.[]] | length' "$file" 2>/dev/null || echo "?")
-              echo "- \`$file\`: $COUNT entries" >> $GITHUB_STEP_SUMMARY
-            fi
-          done

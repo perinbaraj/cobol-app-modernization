@@ -17,7 +17,7 @@
     .\bootstrap.ps1 -Verbose
 
 .NOTES
-    Requires Node.js 18+ and Python 3.8+
+    Requires Node.js 18+ and Python 3.10+
 #>
 
 [CmdletBinding()]
@@ -107,7 +107,9 @@ try {
             if ($pythonVersion -match "Python (\d+)\.(\d+)") {
                 $major = [int]$matches[1]
                 $minor = [int]$matches[2]
-                if ($major -ge 3 -and $minor -ge 8) {
+                $currentVersion = [version]"$major.$minor"
+                $minVersion = [version]"3.10"
+                if ($currentVersion -ge $minVersion) {
                     $pythonCmd = $cmd
                     Write-Success "Python found: $pythonVersion"
                     break
@@ -116,7 +118,7 @@ try {
         }
     }
     if (-not $pythonCmd) {
-        Write-Failure "Python 3.8+ not found. Please install Python from https://python.org"
+        Write-Failure "Python 3.10+ not found. Please install Python from https://python.org"
         $script:hasErrors = $true
     }
 

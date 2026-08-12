@@ -80,32 +80,36 @@ python3 --version # Should be 3.10+
 ```powershell
 # In your migration repository root
 New-Item -ItemType Directory -Force -Path .github
-Copy-Item copilot-config\copilot-instructions.md .github\copilot-instructions.md
+Copy-Item .github\copilot-instructions.md path\to\your\repo\.github\copilot-instructions.md
+Copy-Item .github\copilot-setup-steps.yml path\to\your\repo\.github\copilot-setup-steps.yml
 ```
 
 **Linux/macOS (Bash):**
 ```bash
 # In your migration repository root
-mkdir -p .github
-cp copilot-config/copilot-instructions.md .github/copilot-instructions.md
+mkdir -p path/to/your/repo/.github
+cp .github/copilot-instructions.md path/to/your/repo/.github/
+cp .github/copilot-setup-steps.yml path/to/your/repo/.github/
 ```
 
 > This makes Copilot follow COBOL-to-Java conversion rules in every chat session.
 
-### 2. Copy custom agents
+### 2. Copy custom agents and skills
 
 **Windows (PowerShell):**
 ```powershell
-New-Item -ItemType Directory -Force -Path .github\agents
-# Copy agent instructions (use the content from custom-agents\*.md)
-# Each file documents the agent config to place in .github\agents\
+New-Item -ItemType Directory -Force -Path path\to\your\repo\.github\agents
+New-Item -ItemType Directory -Force -Path path\to\your\repo\.github\skills
+Copy-Item -Recurse .github\agents\* path\to\your\repo\.github\agents\
+Copy-Item -Recurse .github\skills\* path\to\your\repo\.github\skills\
 ```
 
 **Linux/macOS (Bash):**
 ```bash
-mkdir -p .github/agents
-# Copy agent instructions (use the content from custom-agents/*.md)
-# Each file documents the agent config to place in .github/agents/
+mkdir -p path/to/your/repo/.github/agents
+mkdir -p path/to/your/repo/.github/skills
+cp -r .github/agents/* path/to/your/repo/.github/agents/
+cp -r .github/skills/* path/to/your/repo/.github/skills/
 ```
 
 ---

@@ -7,10 +7,7 @@
       "PROD.LOADLIB"
     ],
     "dependencies": [
-      "COMPLETE",
-      "CUSTEXTRACT",
-      "FIRST",
-      "MUST"
+      "CUSTEXTRACT"
     ],
     "fileName": "CUSTBAT.jcl",
     "jobName": "CUSTBAT",
