@@ -16,6 +16,7 @@
 import { readFileSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { VALID_STATUSES } from "./schema.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -86,7 +87,7 @@ const PROGRAM_SCHEMA = {
     migrationStatus: "string",
   },
   enums: {
-    migrationStatus: ["pending", "in-progress", "completed", "blocked"],
+    migrationStatus: VALID_STATUSES,
   },
   ranges: {
     complexity: { min: 1, max: 5 },
@@ -118,7 +119,7 @@ const JCL_SCHEMA = {
     migrationStatus: "string",
   },
   enums: {
-    migrationStatus: ["pending", "in-progress", "completed", "blocked"],
+    migrationStatus: VALID_STATUSES,
   },
 };
 

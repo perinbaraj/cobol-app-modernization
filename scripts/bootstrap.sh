@@ -13,7 +13,7 @@
 #
 # Requirements:
 #   - Node.js 18+
-#   - Python 3.8+
+#   - Python 3.10+
 #
 
 set -e
@@ -133,7 +133,9 @@ for cmd in python3 python; do
         if [[ $PYTHON_VERSION =~ Python\ ([0-9]+)\.([0-9]+) ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
-            if [ "$MAJOR" -ge 3 ] && [ "$MINOR" -ge 8 ]; then
+            
+            # Compare using sort -V or just handle manually for major 3
+            if [ "$MAJOR" -gt 3 ] || ([ "$MAJOR" -eq 3 ] && [ "$MINOR" -ge 10 ]); then
                 PYTHON_CMD=$cmd
                 success "Python found: $PYTHON_VERSION"
                 break
@@ -143,7 +145,7 @@ for cmd in python3 python; do
 done
 
 if [ -z "$PYTHON_CMD" ]; then
-    failure "Python 3.8+ not found. Please install Python from https://python.org"
+    failure "Python 3.10+ not found. Please install Python from https://python.org"
     HAS_ERRORS=true
 fi
 

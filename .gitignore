@@ -1,0 +1,10 @@
+node_modules/
+dist/
+target/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/mcp.json
+coverage/
+*.log

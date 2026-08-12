@@ -1,0 +1,36 @@
+name: Dependency Audit
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: NPM Audit (mainframe-context)
+        working-directory: ./mcp-servers/mainframe-context
+        run: npm audit --audit-level=high || true
+
+      - name: NPM Audit (react)
+        working-directory: ./samples/expected-output/react
+        run: npm audit --audit-level=high || true
+
+      - name: Maven Dependency Check (java)
+        working-directory: ./samples/expected-output/java
+        run: mvn versions:display-dependency-updates || true

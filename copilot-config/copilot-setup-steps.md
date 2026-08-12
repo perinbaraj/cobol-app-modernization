@@ -13,66 +13,11 @@ Copy the YAML content below into `.github/copilot-setup-steps.yml` at the root o
 ### `.github/copilot-setup-steps.yml`
 
 ```yaml
-# Copilot Coding Agent — Environment Setup for the client Migration
-# This runs when Copilot Coding Agent is assigned an issue in this repo.
-
-steps:
-  # Step 1: Install Java 17 (required for Spring Boot services)
-  - name: Set up Java 17
-    uses: actions/setup-java@v4
-    with:
-      distribution: 'temurin'
-      java-version: '17'
-      cache: 'maven'
-
-  # Step 2: Install Node.js 18 (required for React 18.2 frontend)
-  - name: Set up Node.js 18
-    uses: actions/setup-node@v4
-    with:
-      node-version: '18'
-      cache: 'npm'
-
-  # Step 3: Install project dependencies
-  - name: Install Java dependencies
-    run: |
-      if [ -f pom.xml ]; then
-        mvn dependency:resolve -q
-      fi
-      if [ -f build.gradle ]; then
-        ./gradlew dependencies --quiet
-      fi
-
-  - name: Install Node.js dependencies
-    run: |
-      if [ -f package.json ]; then
-        npm ci
-      fi
-
-  # Step 4: Install COBOL analysis tools (for Phase 1 Discovery)
-  - name: Install COBOL tools
-    run: |
-      # Install GnuCOBOL for COBOL syntax validation
-      sudo apt-get update -qq
-      sudo apt-get install -y -qq gnucobol
-
-  # Step 5: Set up MCP Server for mainframe context
-  - name: Set up Mainframe Context MCP Server
-    run: |
-      if [ -d mcp-servers/mainframe-context ]; then
-        cd mcp-servers/mainframe-context
-        npm install --quiet
-      fi
-
-  # Step 6: Verify the environment
-  - name: Verify environment
-    run: |
-      echo "=== Environment Verification ==="
-      echo "Java: $(java --version 2>&1 | head -1)"
-      echo "Maven: $(mvn --version 2>&1 | head -1)"
-      echo "Node: $(node --version)"
-      echo "npm: $(npm --version)"
-      echo "COBOL: $(cobc --version 2>&1 | head -1)"
-      echo "=== Ready for the client Migration ==="
+# Moved
+This file has been consolidated.
+The source of truth is now located at:
+`.github/copilot-setup-steps.yml`
+Please update any references.
 ```
 
 ---

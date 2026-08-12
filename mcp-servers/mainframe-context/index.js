@@ -21,6 +21,7 @@ import { z } from "zod";
 import { readFileSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { VALID_STATUSES } from "./schema.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -149,7 +150,7 @@ server.tool(
     domain: z.string().optional().describe("Business domain filter"),
     complexity_min: z.number().optional().describe("Minimum complexity (1-5)"),
     complexity_max: z.number().optional().describe("Maximum complexity (1-5)"),
-    status: z.enum(["pending", "in_progress", "done"]).optional(),
+    status: z.enum(VALID_STATUSES).optional(),
     pattern: z.string().optional().describe("Program name substring match"),
     limit: z.number().default(20).describe("Max results"),
   },

@@ -13,8 +13,8 @@ This toolkit is maintained by the Migration Enablement Team and accepts contribu
 ### Prerequisites
 
 - Git 2.40+
-- Node.js 20 LTS
-- Python 3.11+
+- Node.js 18+
+- Python 3.10+
 - VS Code with GitHub Copilot extension
 - Access to the repository (request via [access request form])
 
@@ -476,6 +476,6 @@ Use GitHub issue templates:
 
 ## License
 
-This toolkit is proprietary to Acme Corp. See [LICENSE](../LICENSE) for details.
+This toolkit is proprietary to Acme Corp. See [LICENSE](../../LICENSE) for details.
 
 Contributions are subject to the Contributor License Agreement (CLA). First-time contributors will be prompted to sign via CLA bot.
